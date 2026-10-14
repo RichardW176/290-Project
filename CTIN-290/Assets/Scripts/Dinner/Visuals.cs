@@ -8,7 +8,7 @@ namespace Dinner
     public static class Visuals
     {
         static Shader _lit, _particle;
-        static Texture2D _softCircle;
+        static Texture2D _softCircle, _marbling;
 
         static Shader Lit => _lit ??= Shader.Find("Universal Render Pipeline/Lit");
         static Shader Particle => _particle ??= Shader.Find("Universal Render Pipeline/Particles/Unlit");
@@ -20,6 +20,34 @@ namespace Dinner
             m.SetFloat("_Smoothness", smoothness);
             m.SetFloat("_Metallic", metallic);
             return m;
+        }
+
+        public static Material OpaqueTextured(Color tint, Texture2D map, float smoothness = 0.35f)
+        {
+            var m = Opaque(tint, smoothness);
+            m.SetTexture("_BaseMap", map);
+            return m;
+        }
+
+        /// Faint fat veins and mottling for the cut faces of a steak; multiplied by the face tint.
+        public static Texture2D Marbling()
+        {
+            if (_marbling != null) return _marbling;
+            const int n = 128;
+            _marbling = new Texture2D(n, n, TextureFormat.RGBA32, true) { wrapMode = TextureWrapMode.Repeat };
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float u = x / (float)n, v = y / (float)n;
+                    float a = Mathf.PerlinNoise(u * 4.2f + 11.3f, v * 4.2f + 7.1f);
+                    float b = Mathf.PerlinNoise(u * 9f + 3.7f, v * 9f + 5.9f);
+                    float vein = Mathf.Clamp01(1f - Mathf.Abs(a - 0.5f) / 0.045f) * (0.4f + 0.6f * b);
+                    float meat = 0.8f + 0.14f * b;
+                    float k = Mathf.Lerp(meat, 1f, vein);
+                    _marbling.SetPixel(x, y, new Color(k, Mathf.Lerp(k * 0.9f, 1f, vein), Mathf.Lerp(k * 0.88f, 1f, vein), 1f));
+                }
+            _marbling.Apply();
+            return _marbling;
         }
 
         public static Material ParticleSoft(Color color)
