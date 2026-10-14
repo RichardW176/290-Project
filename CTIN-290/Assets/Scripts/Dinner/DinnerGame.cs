@@ -38,6 +38,20 @@ namespace Dinner
         public int SteaksToCook = 3;
         public float RatingSeconds = 5f;
 
+        [Serializable]
+        public class PropSet
+        {
+            [Header("Ultimate Food Pack")]
+            public GameObject Steak, Pan, Plate, Fork, Knife, Soda, Fries, Broccoli, Bread, Bottle1, Bottle2, Ketchup, Jar, SquarePlate, Lettuce, Tomato, TomatoSlice, Pepper, Mushroom, Egg;
+            [Header("LowPoly Kitchen Starter Pack")]
+            public GameObject Spatula, CuttingBoard, KitchenKnife, Milk;
+        }
+
+        [Header("Props — filled from Assets/Models in the Editor when left empty")]
+        public PropSet Pack = new PropSet();
+        public Vector3 CounterSpot = new Vector3(0.75f, 1.60f, -0.80f);    // cutting-board cluster on the counter
+        public Vector3 CounterSpot2 = new Vector3(0.18f, 1.60f, -1.70f);   // milk and eggs back by the wall
+
         public Phase Current { get; private set; }
         public int Round { get; private set; }
         public List<SteakReport> Reports { get; } = new List<SteakReport>();
@@ -52,6 +66,7 @@ namespace Dinner
         AudioClip _chime;
         float _clockMinutes;
         bool _forcedServe;
+        Transform[] _plates = new Transform[0];   // one per friend, filled by DressTable
 
         void Start()
         {
@@ -68,6 +83,9 @@ namespace Dinner
                 if (k != null) KitchenRoot = k.transform;
             }
             if (KitchenRoot != null) KitchenLayout.Apply(this);
+#if UNITY_EDITOR
+            AutoFillPack();
+#endif
             BuildBackdrop();
 
             // camera
@@ -88,7 +106,7 @@ namespace Dinner
 
             // the pan, on the stove (steaks arrive when each round starts)
             _steak = new GameObject("Steaks").AddComponent<SteakCooking>();
-            _steak.Build(PanCenter, new Vector3(0.35f, 0f, 1f), WorldScale * 0.95f);
+            _steak.Build(PanCenter, new Vector3(0.35f, 0f, 1f), WorldScale * 0.95f, Pack.Pan, Pack.Steak, Pack.Spatula);
             _steak.OnPop += OnPop;
             _steak.OnSmokeStarted += OnSmoke;
 
@@ -120,6 +138,8 @@ namespace Dinner
                 go.SetActive(false);   // they arrive during the intro
             }
             if (ChairSeats.Count >= 2) BuildChair(_friends[2]);   // the model only has two chairs
+            DressTable();
+            DressCounter();
             _talk.Friends = _friends;
             _talk.PlayerFocus = _cam.PanPose.Position;
             _talk.IsAttending = () => _cam.AttendingFriends;
@@ -161,6 +181,126 @@ namespace Dinner
             Visuals.Primitive(PrimitiveType.Cube, "Back", root, new Vector3(0f, h + 0.32f * s, -0.23f * s), new Vector3(0.5f * s, 0.7f * s, 0.05f * s), white);
             for (int i = 0; i < 4; i++)
                 Visuals.Primitive(PrimitiveType.Cube, "Leg", root, new Vector3((i % 2 == 0 ? -0.21f : 0.21f) * s, h * 0.5f, (i < 2 ? -0.21f : 0.21f) * s), new Vector3(0.05f * s, h, 0.05f * s), white);
+        }
+
+#if UNITY_EDITOR
+        /// In the Editor, any prop left unassigned is picked up from the packs by path.
+        void AutoFillPack()
+        {
+            const string food = "Assets/Models/Ultimate_Food_Pack/Prefabs/";
+            const string low = "Assets/Models/LowPolyKitchenStarterPack/Prefabs/";
+            GameObject L(string path) => UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (Pack.Steak == null) Pack.Steak = L(food + "Steak.prefab");
+            if (Pack.Pan == null) Pack.Pan = L(food + "FryingPan.prefab");
+            if (Pack.Plate == null) Pack.Plate = L(food + "Plate2.prefab");
+            if (Pack.Fork == null) Pack.Fork = L(food + "Fork.prefab");
+            if (Pack.Knife == null) Pack.Knife = L(food + "Knife.prefab");
+            if (Pack.Soda == null) Pack.Soda = L(food + "Soda.prefab");
+            if (Pack.Fries == null) Pack.Fries = L(food + "Fries.prefab");
+            if (Pack.Broccoli == null) Pack.Broccoli = L(food + "Broccoli.prefab");
+            if (Pack.Bread == null) Pack.Bread = L(food + "Bread.prefab");
+            if (Pack.Bottle1 == null) Pack.Bottle1 = L(food + "Bottle1.prefab");
+            if (Pack.Bottle2 == null) Pack.Bottle2 = L(food + "Bottle2.prefab");
+            if (Pack.Ketchup == null) Pack.Ketchup = L(food + "KetchupMustard.prefab");
+            if (Pack.Jar == null) Pack.Jar = L(food + "Jar_Large.prefab");
+            if (Pack.SquarePlate == null) Pack.SquarePlate = L(food + "Plate_Square.prefab");
+            if (Pack.Lettuce == null) Pack.Lettuce = L(food + "Lettuce.prefab");
+            if (Pack.Tomato == null) Pack.Tomato = L(food + "Tomato.prefab");
+            if (Pack.TomatoSlice == null) Pack.TomatoSlice = L(food + "Tomato_Slice.prefab");
+            if (Pack.Pepper == null) Pack.Pepper = L(food + "Pepper_Red.prefab");
+            if (Pack.Mushroom == null) Pack.Mushroom = L(food + "Mushroom.prefab");
+            if (Pack.Egg == null) Pack.Egg = L(food + "Egg_Whole.prefab");
+            if (Pack.Spatula == null) Pack.Spatula = L(low + "Spatula.prefab");
+            if (Pack.CuttingBoard == null) Pack.CuttingBoard = L(low + "CuttingBoard.prefab");
+            if (Pack.KitchenKnife == null) Pack.KitchenKnife = L(low + "KitchenKnife.prefab");
+            if (Pack.Milk == null) Pack.Milk = L(low + "MilkCarton.prefab");
+        }
+#endif
+
+        GameObject Place(GameObject prefab, Transform parent, Vector3 pos, float yaw, float size, Props.Fit fit = Props.Fit.Largest)
+            => Props.Spawn(prefab, parent, pos, yaw, size, fit);
+
+        /// A place for everyone (yours stays empty all night) and the middle of the table.
+        void DressTable()
+        {
+            var parent = new GameObject("TableSetting").transform;
+            float top = TableCenter.y + 0.004f;
+            _plates = new Transform[_friends.Length];
+            for (int i = 0; i < _friends.Length; i++)
+            {
+                var f = _friends[i].transform;
+                bool endSeat = i == 2 && ChairSeats.Count >= 2;
+                var spot = f.position + f.forward * (endSeat ? 0.55f : 0.62f) + (endSeat ? f.right * 0.14f : Vector3.zero);
+                spot.y = top;
+                float yaw = f.eulerAngles.y;
+                var side = Quaternion.Euler(0f, yaw, 0f);
+                var plate = Place(Pack.Plate, parent, spot, yaw, 0.30f);
+                _plates[i] = plate != null ? plate.transform : null;
+                Place(Pack.Fork, parent, spot + side * new Vector3(-0.21f, 0f, 0f), yaw, 0.22f);
+                Place(Pack.Knife, parent, spot + side * new Vector3(0.21f, 0f, 0f), yaw, 0.22f);
+                Place(Pack.Soda, parent, spot + side * new Vector3(0.27f, 0f, -0.15f), 0f, 0.085f);
+            }
+            var mine = new Vector3(TableCenter.x + 0.1f, top, TableCenter.z - TableSize.z * 0.5f + 0.40f);
+            Place(Pack.Plate, parent, mine, 0f, 0.30f);
+            Place(Pack.Fork, parent, mine + new Vector3(-0.21f, 0f, 0f), 0f, 0.22f);
+            Place(Pack.Knife, parent, mine + new Vector3(0.21f, 0f, 0f), 0f, 0.22f);
+
+            Place(Pack.Bread, parent, new Vector3(TableCenter.x - 0.12f, top, TableCenter.z + 0.02f), 20f, 0.26f);
+            Place(Pack.Bottle1, parent, new Vector3(TableCenter.x - 0.5f, top, TableCenter.z + 0.36f), 0f, 0.10f);
+            Place(Pack.Bottle2, parent, new Vector3(TableCenter.x - 0.63f, top, TableCenter.z + 0.17f), 0f, 0.10f);
+            Place(Pack.Ketchup, parent, new Vector3(TableCenter.x + 0.36f, top, TableCenter.z + 0.4f), -30f, 0.20f);
+            Place(Pack.Jar, parent, new Vector3(TableCenter.x + 0.42f, top, TableCenter.z - 0.08f), 0f, 0.12f);
+            var salad = Place(Pack.SquarePlate, parent, new Vector3(TableCenter.x - 0.15f, top, TableCenter.z + 0.56f), 15f, 0.26f);
+            if (salad != null)
+            {
+                float saladTop = Props.WorldBounds(salad).max.y;
+                var c = new Vector3(TableCenter.x - 0.15f, saladTop, TableCenter.z + 0.56f);
+                Place(Pack.Lettuce, parent, c + new Vector3(-0.03f, 0f, 0.0f), 0f, 0.16f);
+                Place(Pack.TomatoSlice, parent, c + new Vector3(0.07f, 0.004f, 0.05f), 30f, 0.09f);
+                Place(Pack.TomatoSlice, parent, c + new Vector3(0.06f, 0.004f, -0.05f), -40f, 0.09f);
+            }
+        }
+
+        /// Prep clutter on the counter: what the chef was working with before the guests arrived.
+        void DressCounter()
+        {
+            var parent = new GameObject("CounterProps").transform;
+            var board = Place(Pack.CuttingBoard, parent, CounterSpot, 15f, 0.42f);
+            float boardTop = board != null ? Props.WorldBounds(board).max.y : CounterSpot.y;
+            var onBoard = new Vector3(0f, boardTop - CounterSpot.y + 0.002f, 0f);
+            Place(Pack.Tomato, parent, CounterSpot + onBoard + new Vector3(-0.08f, 0f, 0.03f), 0f, 0.09f);
+            Place(Pack.TomatoSlice, parent, CounterSpot + onBoard + new Vector3(0.06f, 0f, -0.02f), 40f, 0.09f);
+            Place(Pack.TomatoSlice, parent, CounterSpot + onBoard + new Vector3(0.11f, 0f, 0.06f), -20f, 0.09f);
+            Place(Pack.KitchenKnife, parent, CounterSpot + onBoard + new Vector3(0.0f, 0f, 0.15f), 100f, 0.25f);
+            Place(Pack.Pepper, parent, CounterSpot + new Vector3(-0.33f, 0f, -0.05f), 0f, 0.10f);
+            Place(Pack.Mushroom, parent, CounterSpot + new Vector3(-0.27f, 0f, 0.14f), 0f, 0.06f);
+            Place(Pack.Mushroom, parent, CounterSpot + new Vector3(-0.2f, 0f, 0.19f), 60f, 0.055f);
+            Place(Pack.Broccoli, parent, CounterSpot + new Vector3(0.34f, 0f, 0.1f), 0f, 0.11f);
+            Place(Pack.Milk, parent, CounterSpot2, 10f, 0.10f);
+            for (int i = 0; i < 3; i++) Place(Pack.Egg, parent, CounterSpot2 + new Vector3(0.15f + i * 0.07f, 0f, (i % 2) * 0.03f), 0f, 0.06f);
+        }
+
+        /// The round's steaks go onto one friend's plate, with sides. Yours stays empty.
+        void PlateRound(int round)
+        {
+            var steaks = _steak.TakeSteaks();
+            int who = (round - 1) % Mathf.Max(1, _plates.Length);
+            var plate = _plates.Length > 0 ? _plates[who] : null;
+            if (plate == null) { foreach (var s in steaks) Destroy(s.gameObject); return; }
+            var b = Props.WorldBounds(plate.gameObject);
+            var center = new Vector3(b.center.x, b.max.y + 0.002f, b.center.z);
+            float yaw = plate.eulerAngles.y;
+            var side = Quaternion.Euler(0f, yaw, 0f);
+            for (int i = 0; i < steaks.Count; i++)
+            {
+                var s = steaks[i];
+                float half = Props.WorldBounds(s.gameObject).size.y * 0.5f;
+                s.rotation = Quaternion.Euler(0f, yaw + 70f + i * 14f, s.eulerAngles.z);   // keep whichever face was up
+                s.position = center + side * new Vector3(-0.03f + i * 0.02f, half, 0.03f - i * 0.06f);
+                s.SetParent(plate, true);
+            }
+            Place(Pack.Fries, plate, center + side * new Vector3(0.09f, 0f, -0.04f), yaw + 20f, 0.13f);
+            Place(Pack.Broccoli, plate, center + side * new Vector3(-0.09f, 0f, -0.07f), yaw, 0.08f);
         }
 
         Light MakeLamp(string name, Vector3 pos, Color color, float intensity, float range)
@@ -221,10 +361,11 @@ namespace Dinner
                     yield return null;
                 }
 
-                // --- the rating
+                // --- the rating; the steaks go to the table
                 Current = Phase.Rating;
                 var report = _steak.Report();
                 Reports.Add(report);
+                PlateRound(Round);
                 _uiAudio.PlayOneShot(_chime, 0.5f);
                 _hud.ShowRating(Round, SteaksToCook, report, RatingSeconds);
                 var verdict = ConversationScript.SteakVerdict(report);
@@ -378,34 +519,76 @@ namespace Dinner
     /// and switches off the camera and area lights that came along with the FBX.
     public static class KitchenLayout
     {
+        /// The model's own tray, pastries, cutlery and candle on the table — replaced by the pack's setting.
+        static readonly string[] TableClutter = { "Material.007", "Material.008", "Material.030", "Material.029", "Material.022", "Material.019", "Material.018", "plate.001" };
+
         public static void Apply(DinnerGame g)
         {
             foreach (var c in g.KitchenRoot.GetComponentsInChildren<Camera>(true)) c.enabled = false;        // would draw over Main Camera
             foreach (var l in g.KitchenRoot.GetComponentsInChildren<Light>(true)) l.enabled = false;         // Blender area lights: baked-only in URP
             foreach (var a in g.KitchenRoot.GetComponentsInChildren<AudioListener>(true)) a.enabled = false;
 
+            // Textured materials in this FBX are named by texture, which can change between imports;
+            // the plain "Material.NNN" ones are stable. Names are matched loosely and chairs have a geometric fallback.
             Bounds stove = default, cloth = default;
             bool hasStove = false, hasCloth = false;
             var chairParts = new List<Bounds>();
-            foreach (var r in g.KitchenRoot.GetComponentsInChildren<Renderer>(true))
+            var renderers = g.KitchenRoot.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
             {
                 foreach (var m in r.sharedMaterials)
                 {
                     if (m == null) continue;
                     string n = m.name;
                     if (n.StartsWith("gas stove")) { stove = hasStove ? Encapsulate(stove, r.bounds) : r.bounds; hasStove = true; }
-                    else if (n.StartsWith("Yellow Tartan")) { cloth = hasCloth ? Encapsulate(cloth, r.bounds) : r.bounds; hasCloth = true; }
+                    else if (n.IndexOf("Tartan", StringComparison.OrdinalIgnoreCase) >= 0) { cloth = hasCloth ? Encapsulate(cloth, r.bounds) : r.bounds; hasCloth = true; }
                     else if (n == g.ChairMaterial) chairParts.Add(r.bounds);
                     else if (n == g.RoomMaterial)
                     {
                         g.RoomBounds = r.bounds;
                         if (m.HasProperty("_BaseColor")) g.WallColor = m.GetColor("_BaseColor");
                     }
-                    if (Array.IndexOf(g.HideMaterials, n) >= 0) r.enabled = false;
+                    if (Array.IndexOf(g.HideMaterials, n) >= 0 || Array.IndexOf(TableClutter, n) >= 0) r.enabled = false;
                 }
             }
             if (hasStove) g.PanCenter = new Vector3(stove.center.x + stove.size.x * 0.3f, stove.max.y + 0.055f, stove.center.z + stove.size.z * 0.35f);
             if (hasCloth) { g.TableCenter = new Vector3(cloth.center.x, cloth.max.y, cloth.center.z); g.TableSize = cloth.size; }
+
+            // --- geometry takes over for whatever the names didn't settle
+            if (g.RoomBounds.size.x < 0.5f)
+            {
+                // the room is the smallest box-sized renderer that is still bigger than any furniture
+                float best = float.MaxValue;
+                foreach (var r in renderers)
+                {
+                    var b = r.bounds;
+                    if (b.size.x < 3.5f || b.size.x > 7.5f || b.size.z < 3.5f || b.size.z > 7.5f || b.size.y < 2.5f || b.size.y > 6f) continue;
+                    if (b.size.x * b.size.z < best) { best = b.size.x * b.size.z; g.RoomBounds = b; var m = r.sharedMaterial; if (m != null && m.HasProperty("_BaseColor")) g.WallColor = m.GetColor("_BaseColor"); }
+                }
+            }
+            foreach (var r in renderers)
+            {
+                if (!r.enabled) continue;
+                var b = r.bounds;
+                // the model's own pan (and whatever is in it) on our burner — small things just above the grate
+                float dx = b.center.x - g.PanCenter.x, dz = b.center.z - g.PanCenter.z;
+                bool onBurner = dx * dx + dz * dz < 0.33f * 0.33f && b.center.y > g.PanCenter.y - 0.012f && b.center.y < g.PanCenter.y + 0.15f && b.size.magnitude < 0.8f;
+                // the model's own table setting — small things sitting on the table top, within the table's footprint
+                bool onTable = Mathf.Abs(b.center.x - g.TableCenter.x) < 0.8f && Mathf.Abs(b.center.z - g.TableCenter.z) < 0.8f
+                               && b.center.y > g.TableCenter.y - 0.06f && b.center.y < g.TableCenter.y + 0.4f && b.size.x < 0.7f && b.size.z < 0.7f && b.size.y < 0.5f;
+                if (onBurner || onTable) r.enabled = false;
+            }
+            if (chairParts.Count == 0)
+            {
+                // the pieces standing in the strip behind the table are the chairs
+                foreach (var r in renderers)
+                {
+                    var b = r.bounds;
+                    bool inStrip = Mathf.Abs(b.center.x - g.TableCenter.x) < 1.4f && b.center.z > g.TableCenter.z + 0.5f && b.center.z < g.TableCenter.z + 1.5f;
+                    bool chairSized = b.size.x < 1.3f && b.size.z < 1.3f && b.center.y < g.FloorY + 1.6f;
+                    if (inStrip && chairSized && r.enabled) chairParts.Add(b);
+                }
+            }
 
             // chairs come in as a dozen loose parts; cluster them along x to find each seat
             g.ChairSeats.Clear();

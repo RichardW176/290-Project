@@ -172,6 +172,33 @@ MonoBehaviour:
   CookingMinutesPerSecond: 0.6
   SteaksToCook: 3
   RatingSeconds: 5
+  Pack:
+    Steak: {fileID: 1684939675748592300, guid: 0923345d51925416484c0bc17d3d26c6, type: 3}
+    Pan: {fileID: 4634345385220383728, guid: 682576b42cf0043e78b0fb7e32da206d, type: 3}
+    Plate: {fileID: 2224550071947783669, guid: a104662c902dd46d29e189a6e3963c09, type: 3}
+    Fork: {fileID: 5064644511317191476, guid: f53dd6f9b2ad44a96890a930630ca0f5, type: 3}
+    Knife: {fileID: 5918525644642882984, guid: 7494fac3064a240f8b1b29e7bbdd033c, type: 3}
+    Soda: {fileID: 6995167273109365028, guid: d9859750f1ad0438290c646562851ee0, type: 3}
+    Fries: {fileID: 1691470734916114097, guid: ec483183e6744438f94cbadfdffc874f, type: 3}
+    Broccoli: {fileID: 8479018552169931189, guid: ec057545667974debb20f46e5a8745bc, type: 3}
+    Bread: {fileID: 6657122631631201468, guid: 2d42aa75d40754250b6d06fc238488c1, type: 3}
+    Bottle1: {fileID: 1595785000782960794, guid: 20120a5e7b83149658857c47433307a5, type: 3}
+    Bottle2: {fileID: 1053807272699624379, guid: b54208dce628f47a88057a3206e24199, type: 3}
+    Ketchup: {fileID: 2559392409922545233, guid: 6fef5f46d7de44106b9282219c6a3719, type: 3}
+    Jar: {fileID: 732343839239631272, guid: 05f3b91dbacd5448fbead71833492cb7, type: 3}
+    SquarePlate: {fileID: 6088351194571264556, guid: da0221f602f7e4173a49c6bc9c081a1a, type: 3}
+    Lettuce: {fileID: 2163932297986445227, guid: 4f7d062e8ed03411db02b6449e547e4f, type: 3}
+    Tomato: {fileID: 2344566372888646817, guid: e9987b746aa884830ab6e4340aa2abcb, type: 3}
+    TomatoSlice: {fileID: 7898135537088045878, guid: 06330a8703d2c49d2a3a364d2c112779, type: 3}
+    Pepper: {fileID: 6423897118811613390, guid: b7ff27a1e8069429da694d830ad60605, type: 3}
+    Mushroom: {fileID: 2824538750231192793, guid: 544ee6d5b4c0b42359452ef4364a57a2, type: 3}
+    Egg: {fileID: 5684094227337148187, guid: 33a1fe10401cb49dbbc7f22e61d30ab7, type: 3}
+    Spatula: {fileID: 4760896961167632372, guid: ce2cdd3d611e40b47a1198ab7102f04f, type: 3}
+    CuttingBoard: {fileID: 4854795617310690723, guid: ca8f3b99dae44e4408fa7db19e583cad, type: 3}
+    KitchenKnife: {fileID: 2419355251282323390, guid: 51fdbb4f8c1ba6449b32d3ce4ded5a7e, type: 3}
+    Milk: {fileID: 2661119575033824818, guid: e2edf68e4ae56a749891560fe164b9a7, type: 3}
+  CounterSpot: {x: 0.75, y: 1.6, z: -0.8}
+  CounterSpot2: {x: 0.18, y: 1.6, z: -1.7}
 --- !u!4 &1054377875
 Transform:
   m_ObjectHideFlags: 0

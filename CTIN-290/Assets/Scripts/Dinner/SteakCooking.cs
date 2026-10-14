@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Dinner
@@ -17,6 +18,13 @@ namespace Dinner
         public float PopIntervalMin = 7f, PopIntervalMax = 15f;
         public const float Target = 0.72f;
 
+        [Header("Prop sizes (world units; the kitchen is ~1.4x life)")]
+        public float PanWidth = 0.50f;
+        public float SteakLength = 0.20f;
+        public float SpatulaLength = 0.34f;
+        public float SpatulaYaw = 180f;                                      // the pack's spatula points its blade along +z
+        public Vector3 SpatulaRestOffset = new Vector3(-0.42f, 0f, 0.02f);   // the burner next door
+
         public event Action OnPop;
         public event Action OnSmokeStarted;
         public event Action OnServed;
@@ -28,33 +36,39 @@ namespace Dinner
         public float Baste { get; private set; }          // 0..1, spooning the butter over once it's in
         public string LastEvent { get; private set; } = "";
         public float LastEventTime { get; private set; } = -99f;
-        public Vector3 PanCenter => _pan ? _pan.position : transform.position;
+        public Vector3 PanCenter => transform.position;
 
         class Face { public float Done, Sear; public bool Salted; }
 
         class Steak
         {
             public Transform Root;
-            public Renderer RendA, RendB;
+            public Material MatA, MatB, MatSide, MatFat;   // bottom face, top face, sides, fat cap
             public Face A = new Face(), B = new Face();
             public bool AIsDown = true;    // which face touches the pan
             public float FlipT = 1f;       // flip animation progress
             public float FlipFrom, FlipTo; // z-rotation in degrees
+            public float RestY;            // local height when lying in the pan
             public Face Down => AIsDown ? A : B;
             public Face Up => AIsDown ? B : A;
             public float Avg => (A.Done + B.Done) * 0.5f;
         }
 
-        Transform _pan;
         Steak[] _steaks = new Steak[0];
+        GameObject _steakPrefab, _spatula;
+        Vector3 _spatulaRest;
+        Quaternion _spatulaRestRot;
+        float _steakBaseY = 0.035f;        // local y of the pan floor
         ParticleSystem _steam, _smoke, _grease;
         AudioSource _sizzle, _oneShot;
         AudioClip _popClip, _alarmClip;
         float _nextPop, _residual, _butterOnHigh;
         bool _smoking;
-        static readonly Color Raw = new Color(0.78f, 0.22f, 0.25f);
-        static readonly Color Seared = new Color(0.45f, 0.24f, 0.11f);
+        static readonly Color Raw = new Color(0.86f, 0.24f, 0.27f);
+        static readonly Color Seared = new Color(0.47f, 0.25f, 0.12f);
         static readonly Color Char = new Color(0.07f, 0.05f, 0.04f);
+        static readonly Color FatRaw = new Color(0.96f, 0.9f, 0.78f);
+        static readonly Color FatRendered = new Color(0.8f, 0.58f, 0.3f);
 
         public float HeatMultiplier => HeatLevel == Heat.High ? 1.5f : HeatLevel == Heat.Low ? 0.6f : 1f;
         public float SearMultiplier => HeatLevel == Heat.High ? 1.6f : HeatLevel == Heat.Low ? 0.35f : 1f;
@@ -93,21 +107,45 @@ namespace Dinner
         public bool HasSteaks => _steaks.Length > 0;
 
         /// Build the pan at a world position with the handle pointing along `handleDir`.
-        public void Build(Vector3 panCenter, Vector3 handleDir, float scale = 1f)
+        /// Pass the pack prefabs to use them; without them the pan, steaks and spatula are primitives.
+        public void Build(Vector3 panCenter, Vector3 handleDir, float scale = 1f, GameObject panPrefab = null, GameObject steakPrefab = null, GameObject spatulaPrefab = null)
         {
             transform.position = panCenter;
             transform.rotation = Quaternion.LookRotation(handleDir.sqrMagnitude > 0.001f ? handleDir : Vector3.back, Vector3.up);
             transform.localScale = Vector3.one * scale;
+            _steakPrefab = steakPrefab;
+            float yaw = transform.eulerAngles.y;
 
-            var iron = Visuals.Opaque(new Color(0.09f, 0.09f, 0.1f), 0.55f, 0.6f);
-            _pan = Visuals.Primitive(PrimitiveType.Cylinder, "Pan", transform, Vector3.zero, new Vector3(0.34f, 0.012f, 0.34f), iron).transform;
-            Visuals.Primitive(PrimitiveType.Cylinder, "PanRim", transform, new Vector3(0, 0.02f, 0), new Vector3(0.36f, 0.025f, 0.36f), iron);
-            Visuals.Primitive(PrimitiveType.Cylinder, "PanFloor", transform, new Vector3(0, 0.032f, 0), new Vector3(0.325f, 0.006f, 0.325f), iron);
-            Visuals.Primitive(PrimitiveType.Cube, "Handle", transform, new Vector3(0, 0.04f, 0.27f), new Vector3(0.035f, 0.02f, 0.2f), iron);
+            if (panPrefab != null)
+            {
+                // the pack's pan: body width fitted to the burner, handle (+z in the model) along handleDir
+                var pan = Props.Spawn(panPrefab, transform, panCenter - Vector3.up * 0.004f, yaw, PanWidth, Props.Fit.X);
+                // where a steak actually rests: the pan's surface at its centre (low-poly pans are often solid)
+                _steakBaseY = (Props.TopSurfaceAtCenter(pan) + 0.003f - transform.position.y) / scale;
+            }
+            else
+            {
+                var iron = Visuals.Opaque(new Color(0.09f, 0.09f, 0.1f), 0.55f, 0.6f);
+                Visuals.Primitive(PrimitiveType.Cylinder, "Pan", transform, Vector3.zero, new Vector3(0.34f, 0.012f, 0.34f), iron);
+                Visuals.Primitive(PrimitiveType.Cylinder, "PanRim", transform, new Vector3(0, 0.02f, 0), new Vector3(0.36f, 0.025f, 0.36f), iron);
+                Visuals.Primitive(PrimitiveType.Cylinder, "PanFloor", transform, new Vector3(0, 0.032f, 0), new Vector3(0.325f, 0.006f, 0.325f), iron);
+                Visuals.Primitive(PrimitiveType.Cube, "Handle", transform, new Vector3(0, 0.04f, 0.27f), new Vector3(0.035f, 0.02f, 0.2f), iron);
+                _steakBaseY = 0.035f;
+            }
 
-            _steam = Visuals.Particles("Steam", transform, new Vector3(0, 0.05f, 0), new Color(1f, 1f, 1f, 0.35f), 0.05f, 0.35f, 0.9f, 0.1f, 0f);
-            _smoke = Visuals.Particles("Smoke", transform, new Vector3(0, 0.06f, 0), new Color(0.35f, 0.35f, 0.35f, 0.5f), 0.12f, 0.45f, 2.6f, 0.08f, 0f);
-            _grease = Visuals.Particles("Grease", transform, new Vector3(0, 0.05f, 0), new Color(1f, 0.92f, 0.6f, 0.9f), 0.015f, 1.4f, 0.5f, 0.08f, 0f);
+            if (spatulaPrefab != null)
+            {
+                // resting flat on the burner next door, long axis toward the cook; slides under the steaks on a flip
+                var rest = panCenter + SpatulaRestOffset;
+                _spatula = Props.Spawn(spatulaPrefab, transform, rest, yaw + SpatulaYaw, SpatulaLength, Props.Fit.Largest);
+                _spatulaRest = _spatula.transform.localPosition;
+                _spatulaRestRot = _spatula.transform.localRotation;
+            }
+
+            var particleY = _steakBaseY + 0.02f;
+            _steam = Visuals.Particles("Steam", transform, new Vector3(0, particleY, 0), new Color(1f, 1f, 1f, 0.35f), 0.05f, 0.35f, 0.9f, 0.1f, 0f);
+            _smoke = Visuals.Particles("Smoke", transform, new Vector3(0, particleY + 0.01f, 0), new Color(0.35f, 0.35f, 0.35f, 0.5f), 0.12f, 0.45f, 2.6f, 0.08f, 0f);
+            _grease = Visuals.Particles("Grease", transform, new Vector3(0, particleY, 0), new Color(1f, 0.92f, 0.6f, 0.9f), 0.015f, 1.4f, 0.5f, 0.08f, 0f);
             var gshape = _grease.shape; gshape.angle = 40f;
             var gmain = _grease.main; gmain.gravityModifier = 1.2f;
 
@@ -129,7 +167,9 @@ namespace Dinner
         public void NewSteaks()
         {
             foreach (var s in _steaks) if (s.Root != null) Destroy(s.Root.gameObject);
-            _steaks = new[] { MakeSteak(new Vector3(-0.075f, 0.045f, 0.01f), 8f), MakeSteak(new Vector3(0.075f, 0.045f, -0.015f), -6f) };
+            int seed = UnityEngine.Random.Range(0, 100000);
+            // side by side across the pan, long axes along the handle, fat caps facing opposite ways
+            _steaks = new[] { MakeSteak(new Vector3(-0.075f, 0f, 0.0f), 96f, seed), MakeSteak(new Vector3(0.075f, 0f, -0.01f), 264f, seed + 1) };
             Served = false; ButterIn = false; Baste = 0f;
             _residual = 0f; _butterOnHigh = 0f; _smoking = false;
             LastEvent = ""; LastEventTime = -99f;
@@ -138,18 +178,59 @@ namespace Dinner
             _oneShot.PlayOneShot(_popClip, 0.6f);
         }
 
-        Steak MakeSteak(Vector3 localPos, float yaw)
+        /// Hand the steaks over for plating; the pan stays empty until NewSteaks().
+        public List<Transform> TakeSteaks()
         {
-            var root = Visuals.Empty("Steak", transform, localPos).transform;
-            root.localRotation = Quaternion.Euler(0, yaw, 0);
-            var s = new Steak { Root = root };
-            var size = new Vector3(0.13f, 0.011f, 0.095f);
-            var halfA = Visuals.Primitive(PrimitiveType.Cube, "SideA", root, new Vector3(0, -0.0055f, 0), size, Visuals.Opaque(Raw, 0.5f));
-            var halfB = Visuals.Primitive(PrimitiveType.Cube, "SideB", root, new Vector3(0, 0.0055f, 0), size, Visuals.Opaque(Raw, 0.5f));
-            s.RendA = halfA.GetComponent<Renderer>();
-            s.RendB = halfB.GetComponent<Renderer>();
-            // a little fat cap along one edge
-            Visuals.Primitive(PrimitiveType.Cube, "Fat", root, new Vector3(0.062f, 0, 0), new Vector3(0.012f, 0.023f, 0.09f), Visuals.Opaque(new Color(0.95f, 0.88f, 0.75f), 0.4f));
+            var list = new List<Transform>();
+            foreach (var s in _steaks) if (s.Root != null) { s.Root.SetParent(null, true); list.Add(s.Root); }
+            _steaks = new Steak[0];
+            return list;
+        }
+
+        Steak MakeSteak(Vector3 localOffset, float yaw, int seed)
+        {
+            var s = new Steak();
+            var root = Visuals.Empty("Steak", transform, Vector3.zero).transform;
+            var marbling = Visuals.Marbling();
+            s.MatA = Visuals.OpaqueTextured(Raw, marbling, 0.6f);
+            s.MatB = Visuals.OpaqueTextured(Raw, marbling, 0.6f);
+            s.MatSide = Visuals.Opaque(Raw, 0.5f);
+            s.MatFat = Visuals.Opaque(FatRaw, 0.45f);
+            float half;
+
+            if (_steakPrefab != null)
+            {
+                // the pack's steak, with its meat mesh split so each face can brown on its own
+                var model = Props.Spawn(_steakPrefab, root, root.position, 0f, SteakLength * (0.94f + 0.12f * UnityEngine.Random.value));
+                var b = Props.WorldBounds(model);
+                half = b.size.y * 0.5f / transform.lossyScale.x;
+                model.transform.localPosition -= Vector3.up * half;   // centre the slab on the root so a flip rolls in place
+                foreach (var r in model.GetComponentsInChildren<MeshRenderer>())
+                {
+                    var mf = r.GetComponent<MeshFilter>();
+                    if (mf == null || mf.sharedMesh == null) continue;
+                    bool fat = r.sharedMaterial != null && r.sharedMaterial.name.StartsWith("White");
+                    if (fat) { r.sharedMaterial = s.MatFat; continue; }
+                    mf.sharedMesh = Props.SplitByFacing(mf.sharedMesh);
+                    r.sharedMaterials = new[] { s.MatA, s.MatB, s.MatSide };
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                }
+            }
+            else
+            {
+                var meat = new GameObject("Meat");
+                meat.transform.SetParent(root, false);
+                meat.AddComponent<MeshFilter>().sharedMesh = SteakMesh.Build(seed);
+                var mr = meat.AddComponent<MeshRenderer>();
+                mr.sharedMaterials = new[] { s.MatA, s.MatB, s.MatSide, s.MatFat };
+                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                half = 0.015f;
+            }
+
+            s.RestY = _steakBaseY + half;
+            root.localPosition = new Vector3(localOffset.x, s.RestY, localOffset.z);
+            root.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            s.Root = root;
             return s;
         }
 
@@ -224,6 +305,7 @@ namespace Dinner
             float heat = cooking ? HeatMultiplier * (ButterIn ? 1.1f : 1f) : 0f;
             float sear = cooking ? SearRate * SearMultiplier * (ButterIn ? 1.2f : 1f) : 0f;
             bool anyCharring = false;
+            float flipPhase = 0f;
 
             foreach (var s in _steaks)
             {
@@ -245,10 +327,24 @@ namespace Dinner
                     var ea = s.Root.localEulerAngles;
                     s.Root.localEulerAngles = new Vector3(ea.x, ea.y, Mathf.Lerp(s.FlipFrom, s.FlipTo, e));
                     var p = s.Root.localPosition;
-                    s.Root.localPosition = new Vector3(p.x, 0.045f + Mathf.Sin(s.FlipT * Mathf.PI) * 0.08f, p.z);
+                    s.Root.localPosition = new Vector3(p.x, s.RestY + Mathf.Sin(s.FlipT * Mathf.PI) * 0.08f, p.z);
+                    flipPhase = Mathf.Max(flipPhase, Mathf.Sin(s.FlipT * Mathf.PI));
                 }
-                s.RendA.sharedMaterial.SetColor("_BaseColor", FaceColor(s.A));
-                s.RendB.sharedMaterial.SetColor("_BaseColor", FaceColor(s.B));
+                Color ca = FaceColor(s.A), cb = FaceColor(s.B);
+                s.MatA.SetColor("_BaseColor", ca); s.MatA.SetFloat("_Smoothness", Mathf.Lerp(0.6f, 0.28f, Mathf.Clamp01(s.A.Sear)));
+                s.MatB.SetColor("_BaseColor", cb); s.MatB.SetFloat("_Smoothness", Mathf.Lerp(0.6f, 0.28f, Mathf.Clamp01(s.B.Sear)));
+                s.MatSide.SetColor("_BaseColor", Color.Lerp(ca, cb, 0.5f));
+                float render = Mathf.Clamp01((s.A.Sear + s.B.Sear) * 0.5f);
+                s.MatFat.SetColor("_BaseColor", Color.Lerp(FatRaw, FatRendered, render));
+                s.MatFat.SetFloat("_Smoothness", Mathf.Lerp(0.45f, 0.7f, render));
+            }
+
+            // the spatula darts under the steaks while they're in the air, then goes back to its burner
+            if (_spatula != null)
+            {
+                var under = new Vector3(0f, _steakBaseY + 0.01f, 0.06f);
+                _spatula.transform.localPosition = Vector3.Lerp(_spatulaRest, under, flipPhase);
+                _spatula.transform.localRotation = _spatulaRestRot * Quaternion.Euler(-28f * flipPhase, 0f, 0f);
             }
 
             // butter can only take so much of a hot pan
