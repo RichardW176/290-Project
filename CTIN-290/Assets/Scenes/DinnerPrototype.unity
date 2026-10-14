@@ -161,9 +161,17 @@ MonoBehaviour:
   - Material.016
   - Material.002
   - Material.001
+  ChairMaterial: Tauari wood.001
+  RoomMaterial: Material.026
+  ChairSeats: []
+  RoomBounds:
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 0, y: 0, z: 0}
+  WallColor: {r: 0.8, g: 0.68, b: 0.58, a: 1}
   StartHour: 19
   CookingMinutesPerSecond: 0.6
-  DinnerMinutesPerSecond: 2.2
+  SteaksToCook: 3
+  RatingSeconds: 5
 --- !u!4 &1054377875
 Transform:
   m_ObjectHideFlags: 0
@@ -406,6 +414,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -8802824965256144030, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: -6922793697723135513, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
     - target: {fileID: -8679921383154817045, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -446,10 +458,74 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8574120244550949717, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 725804396391725484, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: -8366465243809326336, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: -6922793697723135513, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: -7346651851897074712, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: -6922793697723135513, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: -1101197057280088260, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: -6922793697723135513, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: -804731622281664130, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 725804396391725484, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: -154879616144885620, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 3016479151454471876, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
     - target: {fileID: 919132149155446097, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
       propertyPath: m_Name
       value: Isometric Kitchen Scene
       objectReference: {fileID: 0}
+    - target: {fileID: 945454400225530728, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 725804396391725484, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: 950955030030939284, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 637949407474519127, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: 1582845992030254131, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: -6922793697723135513, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: 2029719149498693782, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: -6922793697723135513, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: 4136254586821967637, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: -6922793697723135513, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: 4460646642315447837, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: -6922793697723135513, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: 6761946373660385387, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 725804396391725484, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: 7071182760956848314, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 9185737683893222716, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: 7841272781267861279, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 880774007180850119, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+    - target: {fileID: 9201196466446348581, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 725804396391725484, guid: 83d0e2db502f14fcb92472f9fd704880, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
