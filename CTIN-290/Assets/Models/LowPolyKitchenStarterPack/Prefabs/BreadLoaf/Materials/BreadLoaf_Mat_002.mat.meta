@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 40a3b9784f9410f4aaf40df4d6c3f8b2
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 407614
+  packageName: Low Poly Kitchen Starter Pack
+  packageVersion: 1.0
+  assetPath: Assets/LowPolyKitchenStarterPack/Prefabs/BreadLoaf/Materials/BreadLoaf_Mat_002.mat
+  uploadId: 994902

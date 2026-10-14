@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 68692e6658e11824581cfdeded6bba7c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 407614
+  packageName: Low Poly Kitchen Starter Pack
+  packageVersion: 1.0
+  assetPath: Assets/LowPolyKitchenStarterPack/Prefabs/KitchenKnife/Materials/KitchenKnife_Mat_003.mat
+  uploadId: 994902

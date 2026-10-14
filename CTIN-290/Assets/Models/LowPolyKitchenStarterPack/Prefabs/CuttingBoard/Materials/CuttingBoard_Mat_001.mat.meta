@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6912462f9e25b7b4d8f631233d3a3ecf
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 407614
+  packageName: Low Poly Kitchen Starter Pack
+  packageVersion: 1.0
+  assetPath: Assets/LowPolyKitchenStarterPack/Prefabs/CuttingBoard/Materials/CuttingBoard_Mat_001.mat
+  uploadId: 994902

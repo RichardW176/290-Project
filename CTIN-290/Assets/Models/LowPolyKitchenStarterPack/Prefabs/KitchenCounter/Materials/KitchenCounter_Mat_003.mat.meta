@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 154a1d6f731205f4e845505241f8142f
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 407614
+  packageName: Low Poly Kitchen Starter Pack
+  packageVersion: 1.0
+  assetPath: Assets/LowPolyKitchenStarterPack/Prefabs/KitchenCounter/Materials/KitchenCounter_Mat_003.mat
+  uploadId: 994902
