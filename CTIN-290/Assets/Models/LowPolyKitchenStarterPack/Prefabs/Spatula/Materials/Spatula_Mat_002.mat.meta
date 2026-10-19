@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cad1f88e86b59774fb4721fbdd88bc72
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 407614
+  packageName: Low Poly Kitchen Starter Pack
+  packageVersion: 1.0
+  assetPath: Assets/LowPolyKitchenStarterPack/Prefabs/Spatula/Materials/Spatula_Mat_002.mat
+  uploadId: 994902

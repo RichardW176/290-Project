@@ -1,0 +1,72 @@
+old	new
+Assets/Plugins/BloodEffectsPack/1_URP/Blood/Splash/Blood_Splash_01_Continuous_URP.prefab	Assets/VFX/Blood_Splash_01_Continuous_URP.prefab
+Assets/Plugins/BloodEffectsPack/1_URP/Blood/Splash/Blood_Splash_01_URP.prefab	Assets/VFX/Blood_Splash_01_URP.prefab
+Assets/Plugins/BloodEffectsPack/1_URP/Blood/Splash/Blood_Splash_02_Continuous_URP.prefab	Assets/VFX/Blood_Splash_02_Continuous_URP.prefab
+Assets/Plugins/BloodEffectsPack/1_URP/Blood/Splash/Blood_Splash_02_URP.prefab	Assets/VFX/Blood_Splash_02_URP.prefab
+Assets/Plugins/BloodEffectsPack/1_URP/Blood/Splash/Blood_Splash_03_URP.prefab	Assets/VFX/Blood_Splash_03_URP.prefab
+Assets/Plugins/BloodEffectsPack/1_URP/Blood/Splash/Blood_Splash_04_URP.prefab	Assets/VFX/Blood_Splash_04_URP.prefab
+Assets/Plugins/BloodEffectsPack/1_URP/Blood/Splash/Blood_Splash_05_URP.prefab	Assets/VFX/Blood_Splash_05_URP.prefab
+Assets/Plugins/Polygon Arsenal/Lights/PolygonLight.prefab	Assets/VFX/PolygonLight.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Bubbles/Explosion/BubbleLavaExplosion.prefab	Assets/VFX/BubbleLavaExplosion.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Bubbles/Surface/BubblesSurfaceLava.prefab	Assets/VFX/BubblesSurfaceLava.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Bubbles/Surface/BubblesSurfaceLavaAlt.prefab	Assets/VFX/BubblesSurfaceLavaAlt.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Bubbles/Surface/BubblesSurfaceWater.prefab	Assets/VFX/BubblesSurfaceWater.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Confetti/ConfettiExplosion.prefab	Assets/VFX/ConfettiExplosion.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Dust/DustCalm.prefab	Assets/VFX/DustCalm.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Dust/DustRising.prefab	Assets/VFX/DustRising.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/Big Spiky/FireBigSpikyRed.prefab	Assets/VFX/FireBigSpikyRed.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/Big Spiky/FireBigSpikyYellow.prefab	Assets/VFX/FireBigSpikyYellow.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/Big v2/FireBigRedV2.prefab	Assets/VFX/FireBigRedV2.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/Big v2/FireBigYellowV2.prefab	Assets/VFX/FireBigYellowV2.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/Big/FireBigRed.prefab	Assets/VFX/FireBigRed.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/Big/FireBigYellow.prefab	Assets/VFX/FireBigYellow.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/Candle/CandleRed.prefab	Assets/VFX/CandleRed.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/Candle/CandleYellow.prefab	Assets/VFX/CandleYellow.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/Gasburner.prefab	Assets/VFX/Gasburner.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/OilFire/OilFireRed.prefab	Assets/VFX/OilFireRed.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/OilFire/OilFireYellow.prefab	Assets/VFX/OilFireYellow.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/Small/FireSmallRed.prefab	Assets/VFX/FireSmallRed.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/Small/FireSmallYellow.prefab	Assets/VFX/FireSmallYellow.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/Torch/TorchRed.prefab	Assets/VFX/TorchRed.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Fire/Torch/TorchYellow.prefab	Assets/VFX/TorchYellow.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Liquid/Drip/OilDrip.prefab	Assets/VFX/OilDrip.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Liquid/Flow/OilFlowing.prefab	Assets/VFX/OilFlowing.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Liquid/Fountain/OilFountain.prefab	Assets/VFX/OilFountain.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Smoke/Explosion/SmokeArcExplosionBright.prefab	Assets/VFX/SmokeArcExplosionBright.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Smoke/Explosion/SmokeArcExplosionDark.prefab	Assets/VFX/SmokeArcExplosionDark.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Smoke/Explosion/SmokeCircleBright.prefab	Assets/VFX/SmokeCircleBright.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Smoke/Explosion/SmokeCircleDark.prefab	Assets/VFX/SmokeCircleDark.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Smoke/Explosion/SmokeExplosionBright.prefab	Assets/VFX/SmokeExplosionBright.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Smoke/Explosion/SmokeExplosionDark.prefab	Assets/VFX/SmokeExplosionDark.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Smoke/Rising/SmokeRisingBright.prefab	Assets/VFX/SmokeRisingBright.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Smoke/Rising/SmokeRisingDark.prefab	Assets/VFX/SmokeRisingDark.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Smoke/Rising/SmokestackBright.prefab	Assets/VFX/SmokestackBright.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Smoke/Rising/SmokestackDark.prefab	Assets/VFX/SmokestackDark.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Smoke/Steam/SteamOutlet.prefab	Assets/VFX/SteamOutlet.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Sparks/Explosion/SparkDirectionalSmall.prefab	Assets/VFX/SparkDirectionalSmall.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Sparks/Explosion/SparkExplosionSmall.prefab	Assets/VFX/SparkExplosionSmall.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Sparks/Fountain/SparkFountainNormal.prefab	Assets/VFX/SparkFountainNormal.prefab
+Assets/Plugins/Polygon Arsenal/Prefabs/Environment/Sparks/Fountain/SparkFountainSmall.prefab	Assets/VFX/SparkFountainSmall.prefab
+Assets/Plugins/PolygonApocalypse/Prefabs/FX/Prefabbed/FX_Ash_01.prefab	Assets/VFX/FX_Ash_01.prefab
+Assets/Plugins/PolygonApocalypse/Prefabs/FX/Prefabbed/FX_Fire_01.prefab	Assets/VFX/FX_Fire_01.prefab
+Assets/Plugins/PolygonApocalypse/Prefabs/FX/Prefabbed/FX_Fire_02.prefab	Assets/VFX/FX_Fire_02.prefab
+Assets/Plugins/PolygonApocalypse/Prefabs/FX/Prefabbed/FX_Fire_03.prefab	Assets/VFX/FX_Fire_03.prefab
+Assets/Plugins/PolygonApocalypse/Prefabs/FX/Prefabbed/FX_Fog_Small_01.prefab	Assets/VFX/FX_Fog_Small_01.prefab
+Assets/Plugins/PolygonApocalypse/Prefabs/FX/Prefabbed/FX_Smoke_Black_01.prefab	Assets/VFX/FX_Smoke_Black_01.prefab
+Assets/Plugins/PolygonApocalypse/Prefabs/FX/Prefabbed/FX_Smoke_Large_01.prefab	Assets/VFX/FX_Smoke_Large_01.prefab
+Assets/Plugins/PolygonApocalypse/Prefabs/FX/Prefabbed/FX_Smoke_Small_01.prefab	Assets/VFX/FX_Smoke_Small_01.prefab
+Assets/Plugins/PolygonApocalypse/Prefabs/FX/Prefabbed/Fx_Sparks_01.prefab	Assets/VFX/Fx_Sparks_01.prefab
+Assets/Plugins/PolygonApocalypseWasteland/Prefabs/FX/FX_Exhaust_Small_01.prefab	Assets/VFX/FX_Exhaust_Small_01.prefab
+Assets/Plugins/PolygonApocalypseWasteland/Prefabs/FX/FX_Fire_01.prefab	Assets/VFX/FX_Fire_01_Wasteland.prefab
+Assets/Plugins/PolygonApocalypseWasteland/Prefabs/FX/FX_Fire_Embers_01.prefab	Assets/VFX/FX_Fire_Embers_01.prefab
+Assets/Plugins/PolygonApocalypseWasteland/Prefabs/FX/FX_Flame_Booster_01.prefab	Assets/VFX/FX_Flame_Booster_01.prefab
+Assets/Plugins/PolygonApocalypseWasteland/Prefabs/FX/FX_Goop_Bubbles_01.prefab	Assets/VFX/FX_Goop_Bubbles_01.prefab
+Assets/Plugins/PolygonApocalypseWasteland/Prefabs/FX/FX_Goop_Drip_01.prefab	Assets/VFX/FX_Goop_Drip_01.prefab
+Assets/Plugins/PolygonApocalypseWasteland/Prefabs/FX/FX_Smoke_01.prefab	Assets/VFX/FX_Smoke_01.prefab
+Assets/Plugins/PolygonApocalypseWasteland/Prefabs/FX/FX_Smoke_Large_01.prefab	Assets/VFX/FX_Smoke_Large_01_Wasteland.prefab
+Assets/Plugins/PolygonApocalypseWasteland/Prefabs/FX/FX_Smoke_Small_01.prefab	Assets/VFX/FX_Smoke_Small_01_Wasteland.prefab
+Assets/Plugins/PolygonApocalypseWasteland/Prefabs/FX/FX_Sparks_Line_01.prefab	Assets/VFX/FX_Sparks_Line_01.prefab
+Assets/_Overdawn/Prefabs/VFX/VFX InUse/Environment/Smoke Break (Light).prefab	Assets/VFX/Smoke Break (Light).prefab
+Assets/_Overdawn/Prefabs/VFX/VFX InUse/Environment/Smoke Break (Small).prefab	Assets/VFX/Smoke Break (Small).prefab
+Assets/_Overdawn/Prefabs/VFX/VFX InUse/Weapons/SparkDirectionalSmall 1.prefab	Assets/VFX/SparkDirectionalSmall 1.prefab
+Assets/_Overdawn/Prefabs/VFX/VFX InUse/Weapons/SparkDirectionalSmall 2.prefab	Assets/VFX/SparkDirectionalSmall 2.prefab

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5d3ba346785b80e4c8fbb707682285d2
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 407614
+  packageName: Low Poly Kitchen Starter Pack
+  packageVersion: 1.0
+  assetPath: Assets/LowPolyKitchenStarterPack/Prefabs/Refrigerator/Materials/Refrigerator_Mat_002.mat
+  uploadId: 994902
