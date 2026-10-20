@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Dinner
 {
-    public enum Attention { Intro, Pan, Friends }
+    public enum Attention { Intro, Pan, Friends, Shot }
 
     [System.Serializable]
     public struct CamPose
@@ -18,7 +18,7 @@ namespace Dinner
     /// `FriendsBlend` tells the conversation how much of your attention the table actually has.
     public class AttentionCamera : MonoBehaviour
     {
-        public CamPose IntroPose, PanPose, FriendsPose;
+        public CamPose IntroPose, PanPose, FriendsPose, ShotPose;   // ShotPose: whatever one-off shot is up (the table, the fridge, a plate)
         public float TurnSeconds = 0.75f;
 
         public Attention Target { get; private set; } = Attention.Intro;
@@ -39,6 +39,9 @@ namespace Dinner
             _cam.fieldOfView = p.Fov;
         }
 
+        /// Hard cut to a one-off shot.
+        public void Cut(CamPose pose) { ShotPose = pose; Set(Attention.Shot, true); }
+
         public CamPose Current
         {
             get
@@ -47,6 +50,7 @@ namespace Dinner
                 {
                     case Attention.Pan: return PanPose;
                     case Attention.Friends: return FriendsPose;
+                    case Attention.Shot: return ShotPose;
                     default: return IntroPose;
                 }
             }

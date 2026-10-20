@@ -4,14 +4,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 namespace Dinner
 {
-    /// Bootstraps the whole prototype at runtime around the imported kitchen and runs the evening:
-    /// Intro -> a few rounds of Cooking (stove vs. table), each ending in a rating -> Ending.
+    /// Bootstraps the whole prototype at runtime around the imported kitchen and runs the evening, shot by shot:
+    /// Title -> the table (they're here) -> the kitchen from outside -> per steak: the fridge, the stove
+    /// (stove vs. table), the plate -> Ending.
     public class DinnerGame : MonoBehaviour
     {
-        public enum Phase { Intro, Cooking, Rating, Ending }
+        public enum Phase { Title, Intro, Fetch, Cooking, Rating, Ending }
 
         [Header("Scene hooks")]
         public Transform KitchenRoot;                 // found by name if left empty
@@ -28,7 +30,9 @@ namespace Dinner
         public string RoomMaterial = "Material.026";                                 // the cutaway room box
         [HideInInspector] public List<Vector3> ChairSeats = new List<Vector3>();   // filled by KitchenLayout, sorted by x
         [HideInInspector] public Bounds RoomBounds;
+        [HideInInspector] public Vector3 SpareBurner;                              // front-right burner: the spatula rests there
         [HideInInspector] public Color WallColor = new Color(0.8f, 0.68f, 0.58f);
+        [NonSerialized] public Renderer FridgeBody, FridgeDoor;                    // found by KitchenLayout; null if the model has no fridge
 
         [Header("Clock")]
         public int StartHour = 19;
@@ -52,6 +56,10 @@ namespace Dinner
         public Vector3 CounterSpot = new Vector3(0.75f, 1.60f, -0.80f);    // cutting-board cluster on the counter
         public Vector3 CounterSpot2 = new Vector3(0.18f, 1.60f, -1.70f);   // milk and eggs back by the wall
 
+        [Header("HUD fonts — TMP default when empty")]
+        public TMP_FontAsset DisplayFont;   // headings, keys, Serve, Raw/Burnt
+        public TMP_FontAsset TextFont;      // labels, subtitles
+
         public Phase Current { get; private set; }
         public int Round { get; private set; }
         public List<SteakReport> Reports { get; } = new List<SteakReport>();
@@ -67,6 +75,8 @@ namespace Dinner
         float _clockMinutes;
         bool _forcedServe;
         Transform[] _plates = new Transform[0];   // one per friend, filled by DressTable
+        Fridge _fridge;
+        CamPose _tablePose;
 
         void Start()
         {
@@ -106,9 +116,13 @@ namespace Dinner
 
             // the pan, on the stove (steaks arrive when each round starts)
             _steak = new GameObject("Steaks").AddComponent<SteakCooking>();
+            if (SpareBurner != Vector3.zero) _steak.SpatulaRestOffset = new Vector3(SpareBurner.x - PanCenter.x, 0f, SpareBurner.z - PanCenter.z);
             _steak.Build(PanCenter, new Vector3(0.35f, 0f, 1f), WorldScale * 0.95f, Pack.Pan, Pack.Steak, Pack.Spatula);
             _steak.OnPop += OnPop;
             _steak.OnSmokeStarted += OnSmoke;
+            HoldSpatula();
+            DressStove();
+            if (FridgeBody != null && FridgeDoor != null) _fridge = Fridge.Build(this, FridgeBody, FridgeDoor);
 
             // the friends: two on the kitchen's own chairs along the far side, one at the end of the table
             _talk = new GameObject("Conversation").AddComponent<Conversation>();
@@ -147,7 +161,8 @@ namespace Dinner
             _talk.OnLaughter += OnLaughter;
 
             _hud = new GameObject("HUD").AddComponent<DinnerHUD>();
-            _hud.Build();
+            _hud.Build(DisplayFont, TextFont);
+            _hud.OnServe += () => { if (Current == Phase.Cooking && _cam.Target == Attention.Pan && !_cam.Turning) _steak.Serve(); };
 
             _uiAudio = gameObject.AddComponent<AudioSource>();
             _uiAudio.spatialBlend = 0f;
@@ -280,13 +295,42 @@ namespace Dinner
             for (int i = 0; i < 3; i++) Place(Pack.Egg, parent, CounterSpot2 + new Vector3(0.15f + i * 0.07f, 0f, (i % 2) * 0.03f), 0f, 0.06f);
         }
 
-        /// The round's steaks go onto one friend's plate, with sides. Yours stays empty.
-        void PlateRound(int round)
+        /// Your hand on the spatula's handle, the forearm coming in from where you stand. It rides along on a flip.
+        void HoldSpatula()
+        {
+            var sp = _steak.Spatula;
+            if (sp == null) return;
+            var b = Props.WorldBounds(sp.gameObject);
+            var handleDir = _steak.transform.forward;   // the pan's handle points at the cook; so does the spatula's
+            var grip = b.center + handleDir * (Vector3.Dot(b.extents, new Vector3(Mathf.Abs(handleDir.x), 0f, Mathf.Abs(handleDir.z))) * 0.75f) + Vector3.up * 0.02f;
+            var hand = Hand.Build("SpatulaHand", WorldScale);
+            var elbow = grip + handleDir * 0.42f + Vector3.left * 0.12f + Vector3.up * 0.22f;
+            hand.Reach(grip, grip - elbow, -20f);
+            hand.GripNow(0.85f);
+            hand.transform.SetParent(sp, true);
+        }
+
+        /// What's out on the counter by the stove (shot 5): salt and a mug behind the pan, the butter dish
+        /// to its left, a tub of rosemary and one of salt at the front.
+        void DressStove()
+        {
+            var parent = new GameObject("StoveProps").transform;
+            float counter = CounterSpot.y;
+            var p = new Vector3(PanCenter.x, counter, PanCenter.z);
+            Garnish.SaltShaker(parent, p + new Vector3(0.44f, 0f, -0.24f), 0.12f);
+            Garnish.Mug(parent, p + new Vector3(0.62f, 0f, -0.22f), 0.11f, new Color(0.32f, 0.45f, 0.58f), 30f);
+            Garnish.ButterDish(parent, p + new Vector3(0.56f, 0f, -0.02f), 0.2f, 10f);
+            Garnish.Tub(parent, p + new Vector3(0.5f, 0f, 0.17f), 0.11f, new Color(0.85f, 0.83f, 0.78f), true);
+            Garnish.Tub(parent, p + new Vector3(0.66f, 0f, 0.15f), 0.1f, new Color(0.62f, 0.7f, 0.66f), false);
+        }
+
+        /// The round's steaks go onto one friend's plate, with sides. Yours stays empty. Returns whose plate (-1: none).
+        int PlateRound(int round)
         {
             var steaks = _steak.TakeSteaks();
             int who = (round - 1) % Mathf.Max(1, _plates.Length);
             var plate = _plates.Length > 0 ? _plates[who] : null;
-            if (plate == null) { foreach (var s in steaks) Destroy(s.gameObject); return; }
+            if (plate == null) { foreach (var s in steaks) Destroy(s.gameObject); return -1; }
             var b = Props.WorldBounds(plate.gameObject);
             var center = new Vector3(b.center.x, b.max.y + 0.002f, b.center.z);
             float yaw = plate.eulerAngles.y;
@@ -301,6 +345,8 @@ namespace Dinner
             }
             Place(Pack.Fries, plate, center + side * new Vector3(0.09f, 0f, -0.04f), yaw + 20f, 0.13f);
             Place(Pack.Broccoli, plate, center + side * new Vector3(-0.09f, 0f, -0.07f), yaw, 0.08f);
+            Garnish.Rosemary(plate, center + side * new Vector3(-0.01f, 0.035f, 0.07f), yaw + 100f, 0.13f);
+            return who;
         }
 
         Light MakeLamp(string name, Vector3 pos, Color color, float intensity, float range)
@@ -317,10 +363,15 @@ namespace Dinner
             float eye = FloorY + 1.62f * WorldScale;
             var standing = new Vector3(PanCenter.x + 0.1f, eye, PanCenter.z + 0.78f);
             var friendsFocus = new Vector3(TableCenter.x, FloorY + 1.25f * WorldScale, TableCenter.z + 0.45f);   // chest height across the table
-            _cam.PanPose = Pose(standing, PanCenter + new Vector3(0f, 0f, 0.02f), 50f);
+            // at the pan you lean in over the stove and look down at it, the counter things off to the left (shot 5)
+            _cam.PanPose = Pose(new Vector3(PanCenter.x + 0.1f, PanCenter.y + 0.98f, PanCenter.z + 0.62f), PanCenter + new Vector3(0.14f, 0f, -0.06f), 56f);
             _cam.FriendsPose = Pose(standing, friendsFocus, 60f);
             var intro = new Vector3(TableCenter.x - 3.7f, FloorY + 3.4f, TableCenter.z + 3.2f);
             _cam.IntroPose = Pose(intro, (TableCenter + PanCenter) * 0.5f + Vector3.up * 0.2f, 34f);
+            // behind the two friends on the far side, between their shoulders, looking across the table (shot 2)
+            float back = Mathf.Min(TableCenter.z + TableSize.z * 0.5f + 0.42f, RoomBounds.size.x > 0.5f ? RoomBounds.max.z - 0.08f : 99f);
+            float midX = ChairSeats.Count >= 2 ? (ChairSeats[0].x + ChairSeats[1].x) * 0.5f : TableCenter.x;
+            _tablePose = Pose(new Vector3(midX, FloorY + 1.62f * WorldScale, back), new Vector3(midX, TableCenter.y, TableCenter.z - 0.25f), 70f);
         }
 
         static CamPose Pose(Vector3 from, Vector3 lookAt, float fov)
@@ -329,26 +380,55 @@ namespace Dinner
         // ------------------------------------------------------------------ the evening
         IEnumerator Run()
         {
+            // --- shot 1: the title, over the house at dusk
+            Current = Phase.Title;
+            _hud.SetChrome(false);
+            _hud.ShowTitle(true);
+            bool start = false;
+            _hud.OnStart += () => start = true;
+            _hud.OnQuit += Quit;
+            while (!start)
+            {
+                var kb = Keyboard.current;
+                if (kb != null && kb.escapeKey.wasPressedThisFrame) Quit();
+                yield return null;
+            }
+            _hud.ShowTitle(false);
+            _uiAudio.PlayOneShot(_chime, 0.4f);
+
+            // --- shot 2: they're here — over their shoulders, across the table
             Current = Phase.Intro;
-            _hud.SetPrompts("");
-            _hud.ShowCard("You Had to Be There", "Friday. You've been practising this steak.", 4f);
-            yield return new WaitForSeconds(4.2f);
-
             foreach (var f in _friends) f.gameObject.SetActive(true);
-            _hud.ShowCard("They're here.", "The pan is already hot.", 3f);
-            yield return new WaitForSeconds(3.2f);
+            _cam.Cut(_tablePose);
+            _hud.ShowCard("They're here.", "Friday. You've been practising this steak.", 3.4f);
+            yield return new WaitForSeconds(3.8f);
 
-            _cam.Set(Attention.Pan, instant: true);   // a cut: from outside the house to behind the stove
-            _talk.StartCookingTalk(ConversationScript.CookingBeats());
-            _hud.ShowCard("", "<b>H</b> heat  ·  <b>F</b> flip  ·  <b>S</b> salt  ·  <b>B</b> butter  ·  <b>E</b> plate        <b>Space</b> — look back at them", 6f);
+            // --- shot 3: the whole kitchen, the evening laid out on the HUD
+            _cam.Set(Attention.Intro, instant: true);
+            _hud.SetChrome(true);
+            _hud.SetRound("Dinner for three");
+            _hud.ShowCard("", "Three friends. " + SteaksToCook + " rounds of steak. The pan is already hot.", 3.4f);
+            yield return new WaitForSeconds(3.8f);
 
             for (Round = 1; Round <= SteaksToCook; Round++)
             {
+                // --- shot 4: into the fridge for the steaks
+                Current = Phase.Fetch;
+                _hud.SetRound("Steak " + Round + " <alpha=#80>of " + SteaksToCook);
+                if (Round > 1) _hud.ShowCard("Steak " + Round + " of " + SteaksToCook, "", 2.2f);
+                if (_fridge != null) yield return _fridge.Play(_cam, Round == 1 ? 3.2f : 2.6f);
+
+                // --- shot 5: the stove
+                _cam.Set(Attention.Pan, instant: true);
+                if (Round == 1)
+                {
+                    _talk.StartCookingTalk(ConversationScript.CookingBeats());
+                    _hud.ShowCard("", "Cook both sides. Serve when the bar is in the green.", 4f, 270f);   // up under the bar, off the pan
+                }
                 Current = Phase.Cooking;
                 _forcedServe = false;
                 _steak.NewSteaks();
                 _steak.SetHeat(true);
-                if (Round > 1) _hud.ShowCard("Steak " + Round + " of " + SteaksToCook, "", 2.5f);
 
                 while (!_steak.Served)
                 {
@@ -361,16 +441,18 @@ namespace Dinner
                     yield return null;
                 }
 
-                // --- the rating; the steaks go to the table
+                // --- shot 6: the plate, from above, while the table rates it
                 Current = Phase.Rating;
                 var report = _steak.Report();
                 Reports.Add(report);
-                PlateRound(Round);
+                var plate = PlateRound(Round);
+                if (plate >= 0) { _cam.Cut(PlatePose(plate)); foreach (var f in _friends) f.SitBack(true); }
                 _uiAudio.PlayOneShot(_chime, 0.5f);
                 _hud.ShowRating(Round, SteaksToCook, report, RatingSeconds);
                 var verdict = ConversationScript.SteakVerdict(report);
                 _talk.Interject(UnityEngine.Random.Range(0, 3), verdict[UnityEngine.Random.Range(0, verdict.Length)]);
                 yield return new WaitForSeconds(RatingSeconds + 0.5f);
+                foreach (var f in _friends) f.SitBack(false);
             }
 
             // --- goodnight
@@ -393,6 +475,25 @@ namespace Dinner
             }
         }
 
+        /// Straight down onto a friend's plate, their side at the bottom of the frame: fork left, knife right.
+        CamPose PlatePose(int who)
+        {
+            var plate = _plates[who];
+            var c = Props.WorldBounds(plate.gameObject).center;
+            var away = _friends[who].transform.forward;
+            var pos = c + Vector3.up * 1.0f;   // above the diners' heads with a long lens: heads fall outside the frame, hands and cutlery stay
+            return new CamPose(pos, Quaternion.LookRotation(Vector3.down, away).eulerAngles, 30f);
+        }
+
+        void Quit()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
         IEnumerator ForceServeSoon(float seconds)
         {
             yield return new WaitForSeconds(seconds);
@@ -403,7 +504,7 @@ namespace Dinner
         void Update()
         {
             if (_hud == null) return;
-            float rate = Current == Phase.Cooking || Current == Phase.Rating ? CookingMinutesPerSecond : 0f;
+            float rate = Current == Phase.Fetch || Current == Phase.Cooking || Current == Phase.Rating ? CookingMinutesPerSecond : 0f;
             _clockMinutes += rate * Time.deltaTime;
             _hud.SetClock(ClockString(), "Friday");
             EveningLight();
@@ -415,27 +516,24 @@ namespace Dinner
         {
             var kb = Keyboard.current;
             if (kb == null) return;
-            if (Current != Phase.Cooking && Current != Phase.Rating) return;
+            if (Current != Phase.Cooking) return;   // the other shots play out on their own
 
             bool atPan = _cam.Target == Attention.Pan;
             if (kb.spaceKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame)
                 _cam.Set(atPan ? Attention.Friends : Attention.Pan);
 
-            if (Current == Phase.Cooking)
+            bool action = kb.hKey.wasPressedThisFrame || kb.fKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame || kb.bKey.wasPressedThisFrame || kb.eKey.wasPressedThisFrame;
+            if (atPan && !_cam.Turning)
             {
-                bool action = kb.hKey.wasPressedThisFrame || kb.fKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame || kb.bKey.wasPressedThisFrame || kb.eKey.wasPressedThisFrame;
-                if (atPan && !_cam.Turning)
-                {
-                    if (kb.hKey.wasPressedThisFrame) _steak.CycleHeat();
-                    if (kb.fKey.wasPressedThisFrame) _steak.Flip();
-                    if (kb.sKey.wasPressedThisFrame) _steak.Season();
-                    if (kb.bKey.wasPressedThisFrame) _steak.AddButter();
-                    if (kb.eKey.wasPressedThisFrame) _steak.Serve();
-                }
-                else if (action)
-                {
-                    _cam.Set(Attention.Pan);   // you have to turn back first; that costs you the sentence
-                }
+                if (kb.hKey.wasPressedThisFrame) _steak.CycleHeat();
+                if (kb.fKey.wasPressedThisFrame) _steak.Flip();
+                if (kb.sKey.wasPressedThisFrame) _steak.Season();
+                if (kb.bKey.wasPressedThisFrame) _steak.AddButter();
+                if (kb.eKey.wasPressedThisFrame) _steak.Serve();
+            }
+            else if (action)
+            {
+                _cam.Set(Attention.Pan);   // you have to turn back first; that costs you the sentence
             }
 
             if (!atPan && kb.qKey.wasPressedThisFrame && _talk.AskWhatWasThat()) _hud.Flash(0.15f);
@@ -443,15 +541,15 @@ namespace Dinner
 
         void UpdateHud()
         {
-            bool atStove = Current == Phase.Cooking || Current == Phase.Rating;
-            bool facingPan = atStove && !_cam.AttendingFriends;
-            _hud.SetPan(atStove && (facingPan || _steak.Served), _steak);
+            // the stove HUD only while cooking; its pan half flips away as soon as you turn to the table
+            _hud.SetStove(Current == Phase.Cooking, _cam.Target == Attention.Pan, _talk.AskableBeat != null, _steak);
 
             var line = _talk.CurrentLine;
             if (line != null)
             {
                 bool friendLine = line.Speaker >= 0;
-                bool muffled = atStove && !_cam.AttendingFriends && friendLine;
+                // you only hear them properly when you're facing them, or standing at the table with the plate
+                bool muffled = friendLine && !_cam.AttendingFriends && Current != Phase.Rating;
                 string who = friendLine ? ConversationScript.Names[line.Speaker] : line.Speaker == ConversationScript.You ? "You" : "";
                 Color c = friendLine ? Color.Lerp(ConversationScript.ShirtColors[line.Speaker], Color.white, 0.35f) : new Color(0.9f, 0.9f, 0.8f);
                 string text = muffled ? Conversation.Muffle(line.Text) : line.Speaker == ConversationScript.Stage ? "<i>" + line.Text + "</i>" : line.Text;
@@ -459,17 +557,6 @@ namespace Dinner
             }
             else if (_talk.IsLaughing) _hud.SetSubtitle("", Color.white, "<i>(laughter)</i>", false);
             else _hud.ClearSubtitle();
-
-            string prompts = "";
-            if (Current == Phase.Cooking)
-            {
-                if (_cam.Target == Attention.Pan)
-                    prompts = "<b>H</b>  heat: " + _steak.HeatWord.ToLower() + "\n<b>F</b>  flip\n<b>S</b>  salt this side\n<b>B</b>  " + (_steak.ButterIn ? "baste" : "butter") + "\n<b>E</b>  plate & serve\n\n<b>Space</b>  look back at them";
-                else
-                    prompts = (_talk.AskableBeat != null ? "<b>Q</b>  \"wait, what was that about?\"\n" : "") + "<b>Space</b>  back to the pan";
-            }
-            else if (Current == Phase.Rating) prompts = "<alpha=#70>steak " + Round + " of " + SteaksToCook;
-            _hud.SetPrompts(prompts);
         }
 
         void OnPop()
@@ -551,7 +638,8 @@ namespace Dinner
                     if (Array.IndexOf(g.HideMaterials, n) >= 0 || Array.IndexOf(TableClutter, n) >= 0) r.enabled = false;
                 }
             }
-            if (hasStove) g.PanCenter = new Vector3(stove.center.x + stove.size.x * 0.3f, stove.max.y + 0.055f, stove.center.z + stove.size.z * 0.35f);
+            if (hasStove) FindBurners(g, stove, renderers);
+            FindFridge(g, renderers);
             if (hasCloth) { g.TableCenter = new Vector3(cloth.center.x, cloth.max.y, cloth.center.z); g.TableSize = cloth.size; }
 
             // --- geometry takes over for whatever the names didn't settle
@@ -601,6 +689,62 @@ namespace Dinner
                 cluster = b; open = true;
             }
             if (open) g.ChairSeats.Add(new Vector3(cluster.center.x, g.FloorY, cluster.center.z));
+        }
+
+        /// The grate is four little crosses of bars on the stove top, one per burner; group them by quadrant.
+        /// The pan goes on the front-left one as you stand at the stove (front = toward the room, +z; facing
+        /// the wall your left is +x) — the burner the model's own pan sat on. The spatula rests front-right.
+        static void FindBurners(DinnerGame g, Bounds stove, Renderer[] renderers)
+        {
+            var sum = new Vector3[4]; var count = new int[4]; float grateTop = stove.max.y;
+            var area = stove; area.Expand(new Vector3(0.2f, 0f, 0.2f));   // the grate's outer bars overhang the stove-top mesh
+            foreach (var r in renderers)
+            {
+                if (!r.enabled) continue;   // the model's pan and what's in it, already hidden
+                var b = r.bounds;
+                float thin = Mathf.Min(b.size.x, b.size.z), longSide = Mathf.Max(b.size.x, b.size.z);
+                bool bar = thin < 0.05f && longSide > 0.07f && longSide < 0.16f && b.size.y < 0.05f
+                           && b.center.y > stove.max.y - 0.01f && b.center.y < stove.max.y + 0.06f
+                           && b.center.x > area.min.x && b.center.x < area.max.x && b.center.z > area.min.z && b.center.z < area.max.z;
+                if (!bar) continue;
+                int q = (b.center.x > stove.center.x ? 1 : 0) + (b.center.z > stove.center.z ? 2 : 0);
+                sum[q] += b.center; count[q]++;
+                grateTop = Mathf.Max(grateTop, b.max.y);
+            }
+            Vector3 Burner(int q, float fx) => count[q] > 0 ? sum[q] / count[q]
+                : new Vector3(stove.center.x + stove.size.x * fx, 0f, stove.center.z + stove.size.z * 0.25f);
+            var frontLeft = Burner(3, 0.3f);
+            var frontRight = Burner(2, -0.3f);
+            g.PanCenter = new Vector3(frontLeft.x, grateTop + 0.004f, frontLeft.z);   // Build sinks the pan 4 mm, so its base sits on the grate
+            g.SpareBurner = new Vector3(frontRight.x, grateTop, frontRight.z);
+        }
+
+        /// The fridge is the tallest free-standing box in the room (its material is called "fridge" in the
+        /// current import); its lower door is the thin, tall slab on its front.
+        static void FindFridge(DinnerGame g, Renderer[] renderers)
+        {
+            Renderer body = null; float best = 0f;
+            foreach (var r in renderers)
+            {
+                var b = r.bounds;
+                bool named = r.sharedMaterial != null && r.sharedMaterial.name.IndexOf("fridge", StringComparison.OrdinalIgnoreCase) >= 0;
+                bool boxy = b.size.y > 1.8f && b.size.y < 3.2f && Mathf.Min(b.size.x, b.size.z) > 0.5f && Mathf.Max(b.size.x, b.size.z) < 1.5f;
+                if (!boxy) continue;
+                float score = b.size.x * b.size.y * b.size.z * (named ? 10f : 1f);
+                if (score > best) { best = score; body = r; }
+            }
+            if (body == null) return;
+            Renderer door = null; float lowest = float.MaxValue;
+            var near = body.bounds; near.Expand(new Vector3(0.3f, 0f, 0.3f));
+            foreach (var r in renderers)
+            {
+                if (r == body) continue;
+                var b = r.bounds;
+                bool slab = Mathf.Min(b.size.x, b.size.z) < 0.2f && Mathf.Max(b.size.x, b.size.z) > 0.6f && b.size.y > 0.8f;
+                if (slab && near.Contains(b.center) && b.min.y < lowest) { lowest = b.min.y; door = r; }
+            }
+            if (door == null) return;
+            g.FridgeBody = body; g.FridgeDoor = door;
         }
 
         static Bounds Encapsulate(Bounds a, Bounds b) { a.Encapsulate(b); return a; }

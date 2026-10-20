@@ -58,6 +58,16 @@ namespace Dinner
         public void LookAt(Vector3 worldPoint) { _lookTarget = worldPoint; _hasLook = true; }
         public void LookAhead() { _hasLook = false; }
 
+        /// Arms off the table (sitting back) — they'd fill the overhead plate shot.
+        public void SitBack(bool back)
+        {
+            foreach (var n in new[] { "ArmL", "ArmR", "HandL", "HandR" })
+            {
+                var t = _torso.Find(n);
+                if (t != null) t.gameObject.SetActive(!back);
+            }
+        }
+
         void Update()
         {
             float t = Time.time + _seed;

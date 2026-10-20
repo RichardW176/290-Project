@@ -64,6 +64,18 @@ namespace Dinner
             return b;
         }
 
+        /// The renderer with the largest footprint — a pan's body rather than its handle.
+        public static Renderer WidestPart(GameObject go)
+        {
+            Renderer best = null; float area = 0f;
+            foreach (var r in go.GetComponentsInChildren<Renderer>(true))
+            {
+                float a = r.bounds.size.x * r.bounds.size.z;
+                if (a > area) { area = a; best = r; }
+            }
+            return best;
+        }
+
         /// Built-in-pipeline materials (the LowPoly kitchen pack) render magenta in URP; swap them for Lit copies.
         public static void FixMaterialsForUrp(GameObject go)
         {

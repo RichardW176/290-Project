@@ -260,6 +260,7 @@ MonoBehaviour:
   RoomBounds:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 0, y: 0, z: 0}
+  SpareBurner: {x: 0, y: 0, z: 0}
   WallColor: {r: 0.8, g: 0.68, b: 0.58, a: 1}
   StartHour: 19
   CookingMinutesPerSecond: 0.6
@@ -292,6 +293,8 @@ MonoBehaviour:
     Milk: {fileID: 2661119575033824818, guid: e2edf68e4ae56a749891560fe164b9a7, type: 3}
   CounterSpot: {x: 0.75, y: 1.6, z: -0.8}
   CounterSpot2: {x: 0.18, y: 1.6, z: -1.7}
+  DisplayFont: {fileID: 11400000, guid: 0b1d68e20206ad942a0c5bc8aa07aac2, type: 2}
+  TextFont: {fileID: 0}
 --- !u!4 &1054377875
 Transform:
   m_ObjectHideFlags: 0
